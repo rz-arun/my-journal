@@ -3,6 +3,7 @@
   import { today as todayStore, dataVersion, bumpData } from '$lib/store';
   import { prevDay } from '$lib/date';
   import HabitRow from '../components/HabitRow.svelte';
+  import AdHocTodos from '../components/AdHocTodos.svelte';
 
   const EMPTY_COMPLETIONS: ReadonlySet<string> = new Set();
 
@@ -83,4 +84,6 @@
         onToggle={() => onToggle(habit)} />
     {/each}
   </div>
+
+  <AdHocTodos date={$todayStore} />
 </main>
