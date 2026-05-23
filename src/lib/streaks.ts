@@ -58,14 +58,11 @@ export function computeStreak(
   } else if (validCompletions.size === 0) {
     // Never started — not broken, just fresh
     status = 'on';
+  } else if (dayBefore >= habitCreatedAt && validCompletions.has(dayBefore)) {
+    // Yesterday missed, day-before done — one slip, streak still alive
+    status = 'warning';
   } else {
-    // Yesterday was missed; check day-before
-    const dBefore = dayBefore >= habitCreatedAt;
-    if (dBefore && validCompletions.has(dayBefore)) {
-      status = 'warning';
-    } else {
-      status = 'broken';
-    }
+    status = 'broken';
   }
 
   // --- Longest streak (walk all completions, same rule) ---
@@ -75,9 +72,8 @@ export function computeStreak(
     let run = 1;
     for (let i = 1; i < sorted.length; i++) {
       const gap = (new Date(sorted[i]).getTime() - new Date(sorted[i - 1]).getTime()) / 86_400_000;
-      if (gap === 1) {
-        run++;
-      } else if (gap === 2) {
+      if (gap <= 2) {
+        // gap=1 (consecutive) or gap=2 (one allowed miss) both continue the run
         run++;
       } else {
         longest = Math.max(longest, run);

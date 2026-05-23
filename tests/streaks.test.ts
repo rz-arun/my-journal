@@ -44,7 +44,7 @@ describe('computeStreak', () => {
 
   it('shows broken when two consecutive misses precede today', () => {
     expect(computeStreak(setOf('2026-05-20', '2026-05-19'), '2026-05-23', created)).toMatchObject({
-      current: 0, status: 'broken'
+      current: 0, status: 'broken', longest: 2
     });
   });
 
