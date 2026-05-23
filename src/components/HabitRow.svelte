@@ -1,6 +1,6 @@
 <script lang="ts">
   import type { Habit, Tag } from '$lib/db';
-  import type { DateStr } from '$lib/date';
+  import { type DateStr, tsToDateStr } from '$lib/date';
   import { computeStreak, type StreakResult } from '$lib/streaks';
   import Chain from './Chain.svelte';
   import Checkbox from './Checkbox.svelte';
@@ -14,12 +14,7 @@
     onToggle: () => void;
   } = $props();
 
-  function isoFromTs(ts: number): DateStr {
-    const d = new Date(ts);
-    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-  }
-
-  let createdDate = $derived(isoFromTs(habit.createdAt));
+  let createdDate = $derived(tsToDateStr(habit.createdAt));
   let streak = $derived(computeStreak(completions, today, createdDate));
   let checked = $derived(completions.has(today));
   let rowTags = $derived(habit.tagIds.map(id => tagsById.get(id)).filter((t): t is Tag => !!t));

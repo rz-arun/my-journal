@@ -29,3 +29,7 @@ export function daysBetween(start: DateStr, end: DateStr): number {
   const ms = parse(end).getTime() - parse(start).getTime();
   return Math.round(ms / 86_400_000);
 }
+
+export function tsToDateStr(ts: number): DateStr {
+  return todayLocal(new Date(ts));
+}

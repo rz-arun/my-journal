@@ -3,6 +3,8 @@
   import { today as todayStore, dataVersion, bumpData } from '$lib/store';
   import HabitRow from '../components/HabitRow.svelte';
 
+  const EMPTY_COMPLETIONS: ReadonlySet<string> = new Set();
+
   let habits = $state<Habit[]>([]);
   let completionsByHabit = $state(new Map<string, Set<string>>());
   let tagsById = $state(new Map<string, Tag>());
@@ -34,7 +36,7 @@
 
 <main class="px-4 pt-6 pb-4 max-w-md mx-auto">
   <h1 class="text-2xl font-semibold">
-    {new Date().toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })}
+    {new Date($todayStore + 'T00:00:00').toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })}
   </h1>
 
   <div class="mt-4">
@@ -42,7 +44,7 @@
       <HabitRow
         {habit}
         today={$todayStore}
-        completions={completionsByHabit.get(habit.id) ?? new Set()}
+        completions={completionsByHabit.get(habit.id) ?? (EMPTY_COMPLETIONS as Set<string>)}
         {tagsById}
         onToggle={() => onToggle(habit)} />
     {/each}
