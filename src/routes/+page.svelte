@@ -5,6 +5,7 @@
   import HabitRow from '../components/HabitRow.svelte';
   import AdHocTodos from '../components/AdHocTodos.svelte';
   import DailyNote from '../components/DailyNote.svelte';
+  import BackupBanner from '../components/BackupBanner.svelte';
 
   const EMPTY_COMPLETIONS: ReadonlySet<string> = new Set();
 
@@ -58,6 +59,7 @@
 </script>
 
 <main class="px-4 pt-6 pb-4 max-w-md mx-auto">
+  <BackupBanner />
   <h1 class="text-2xl font-semibold">
     {new Date($todayStore + 'T00:00:00').toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })}
   </h1>
