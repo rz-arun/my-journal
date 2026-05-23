@@ -11,7 +11,7 @@
   let current = $derived($page.url.pathname.replace(base, '') || '/');
 </script>
 
-<nav class="fixed bottom-0 left-0 right-0 bg-neutral-950 border-t border-neutral-900 flex justify-around py-3 pb-safe">
+<nav aria-label="Main navigation" class="fixed bottom-0 left-0 right-0 bg-neutral-950 border-t border-neutral-900 flex justify-around py-3 pb-safe">
   {#each tabs as t}
     {@const active = current === t.href}
     <a href="{base}{t.href}"
