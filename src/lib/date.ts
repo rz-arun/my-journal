@@ -33,3 +33,14 @@ export function daysBetween(start: DateStr, end: DateStr): number {
 export function tsToDateStr(ts: number): DateStr {
   return todayLocal(new Date(ts));
 }
+
+export type HabitSchedule = 'daily' | 'weekdays' | 'weekends';
+
+/** A weekend = Sat or Sun, weekday = Mon–Fri (local calendar). */
+export function isScheduledFor(schedule: HabitSchedule | undefined, date: DateStr): boolean {
+  const s = schedule ?? 'daily';
+  if (s === 'daily') return true;
+  const dow = parse(date).getDay(); // 0 = Sun, 6 = Sat
+  const isWeekend = dow === 0 || dow === 6;
+  return s === 'weekends' ? isWeekend : !isWeekend;
+}

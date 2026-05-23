@@ -1,6 +1,8 @@
 import Dexie, { type Table } from 'dexie';
 import type { DateStr } from './date';
 
+export type HabitSchedule = 'daily' | 'weekdays' | 'weekends';
+
 export interface Habit {
   id: string;
   name: string;
@@ -9,6 +11,7 @@ export interface Habit {
   createdAt: number;
   archivedAt: number | null;
   sortOrder: number;
+  schedule?: HabitSchedule;  // missing = 'daily' (back-compat with v1 rows + older backups)
 }
 
 export interface Tag {
@@ -158,6 +161,7 @@ export interface HabitEdit {
   name: string;
   emoji?: string;
   tagIds: string[];
+  schedule: HabitSchedule;
 }
 
 export async function updateHabit(habitId: string, edits: HabitEdit): Promise<void> {
@@ -168,6 +172,7 @@ export async function updateHabit(habitId: string, edits: HabitEdit): Promise<vo
     name: edits.name,
     emoji: edits.emoji,
     // Spread to plain array — guards against Svelte 5 $state Proxy reaching IndexedDB structured-clone
-    tagIds: [...edits.tagIds]
+    tagIds: [...edits.tagIds],
+    schedule: edits.schedule
   });
 }

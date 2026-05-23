@@ -16,7 +16,7 @@
   } = $props();
 
   let createdDate = $derived(tsToDateStr(habit.createdAt));
-  let streak = $derived(computeStreak(completions, today, createdDate));
+  let streak = $derived(computeStreak(completions, today, createdDate, habit.schedule ?? 'daily'));
   let checked = $derived(completions.has(today));
   let rowTags = $derived(habit.tagIds.map(id => tagsById.get(id)).filter((t): t is Tag => !!t));
   let primaryColor = $derived(rowTags[0]?.color ?? '#48d36a');

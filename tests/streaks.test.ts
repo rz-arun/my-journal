@@ -93,3 +93,63 @@ describe('computeStreak', () => {
     expect(computeStreak(dates, '2026-05-23', created).totalDays).toBe(3);
   });
 });
+
+// 2026-05-23 is a Saturday. Mon=18, Tue=19, Wed=20, Thu=21, Fri=22, Sat=23, Sun=24
+describe('computeStreak — weekdays-only schedule', () => {
+  const created = '2025-01-01';
+
+  it('does not penalize Saturday when the habit only runs on weekdays', () => {
+    // Mon–Fri done, no completion today (Sat) — schedule says today is an off-day.
+    const dates = setOf('2026-05-18', '2026-05-19', '2026-05-20', '2026-05-21', '2026-05-22');
+    expect(computeStreak(dates, '2026-05-23', created, 'weekdays')).toMatchObject({
+      current: 5, status: 'on'
+    });
+  });
+
+  it('counts a 5-day weekday run regardless of weekend gap', () => {
+    // Two work weeks complete; weekend in the middle (Sat 16, Sun 17) is invisible to the streak.
+    const dates = setOf(
+      '2026-05-22', '2026-05-21', '2026-05-20', '2026-05-19', '2026-05-18',
+      '2026-05-15', '2026-05-14', '2026-05-13', '2026-05-12', '2026-05-11'
+    );
+    expect(computeStreak(dates, '2026-05-23', created, 'weekdays')).toMatchObject({
+      current: 10, status: 'on'
+    });
+  });
+
+  it('breaks when the last two weekdays are missed', () => {
+    // Wed done, then Thu + Fri missed; today is Sat (off-day).
+    const dates = setOf('2026-05-20');
+    expect(computeStreak(dates, '2026-05-23', created, 'weekdays')).toMatchObject({
+      current: 0, status: 'broken'
+    });
+  });
+
+  it('allows one skipped weekday inside a run (never miss twice)', () => {
+    // Mon–Wed + Fri done, Thu missed → streak continues across the single weekday gap.
+    const dates = setOf('2026-05-22', '2026-05-20', '2026-05-19', '2026-05-18');
+    const r = computeStreak(dates, '2026-05-23', created, 'weekdays');
+    expect(r).toMatchObject({ current: 4, status: 'on' });
+  });
+});
+
+describe('computeStreak — weekends-only schedule', () => {
+  const created = '2025-01-01';
+
+  it('counts back-to-back weekends as a continuous streak', () => {
+    // Sat 23 (today), Sun 17, Sat 16 — Mon–Fri between are invisible.
+    const dates = setOf('2026-05-23', '2026-05-17', '2026-05-16');
+    expect(computeStreak(dates, '2026-05-23', created, 'weekends')).toMatchObject({
+      current: 3, status: 'on'
+    });
+  });
+
+  it('ignores a Wednesday completion entirely for a weekends habit', () => {
+    // Today (Sat) not done, last scheduled (Sun 17) not done either → broken,
+    // even though there is a midweek completion in history.
+    const dates = setOf('2026-05-20');
+    expect(computeStreak(dates, '2026-05-23', created, 'weekends')).toMatchObject({
+      current: 0, status: 'broken'
+    });
+  });
+});

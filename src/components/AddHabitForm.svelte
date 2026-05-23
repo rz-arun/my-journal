@@ -1,6 +1,12 @@
 <script lang="ts">
   import { untrack } from 'svelte';
-  import { db, updateHabit, type Habit, type Tag } from '$lib/db';
+  import { db, updateHabit, type Habit, type HabitSchedule, type Tag } from '$lib/db';
+
+  const SCHEDULES: { value: HabitSchedule; label: string }[] = [
+    { value: 'daily',    label: 'Daily' },
+    { value: 'weekdays', label: 'Weekdays' },
+    { value: 'weekends', label: 'Weekends' }
+  ];
 
   let { allTags, editing = null, onSaved, onCancel }: {
     allTags: Tag[];
@@ -16,6 +22,7 @@
   let name = $state(untrack(() => editing?.name ?? ''));
   let emoji = $state(untrack(() => editing?.emoji ?? ''));
   let pickedTagIds = $state<string[]>(untrack(() => editing ? [...editing.tagIds] : []));
+  let schedule = $state<HabitSchedule>(untrack(() => editing?.schedule ?? 'daily'));
   let newTagName = $state('');
 
   const isEdit = $derived(editing !== null);
@@ -53,7 +60,8 @@
       await updateHabit(editing.id, {
         name: trimmed,
         emoji: emoji.trim() || undefined,
-        tagIds: pickedTagIds
+        tagIds: pickedTagIds,
+        schedule
       });
     } else {
       const count = await db.habits.count();
@@ -64,11 +72,12 @@
         tagIds: [...pickedTagIds],
         createdAt: Date.now(),
         archivedAt: null,
-        sortOrder: count
+        sortOrder: count,
+        schedule
       });
     }
 
-    name = ''; emoji = ''; pickedTagIds = [];
+    name = ''; emoji = ''; pickedTagIds = []; schedule = 'daily';
     onSaved();
   }
 </script>
@@ -83,6 +92,17 @@
     placeholder="Emoji"
     bind:value={emoji}
     maxlength={2} />
+
+  <div class="mt-3">
+    <div class="text-[10px] uppercase tracking-wider text-neutral-500 mb-2">Schedule</div>
+    <div class="flex bg-neutral-900 rounded p-0.5">
+      {#each SCHEDULES as s}
+        <button type="button"
+          class="flex-1 text-xs py-1.5 rounded transition-colors {schedule === s.value ? 'bg-emerald-500 text-black font-medium' : 'text-neutral-400'}"
+          onclick={() => schedule = s.value}>{s.label}</button>
+      {/each}
+    </div>
+  </div>
 
   <div class="mt-3">
     <div class="text-[10px] uppercase tracking-wider text-neutral-500 mb-2">Tags</div>

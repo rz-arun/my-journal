@@ -2,7 +2,7 @@
   import { page } from '$app/stores';
   import { base } from '$app/paths';
   import { db, getCompletionsForHabit, type Habit, type Tag } from '$lib/db';
-  import { todayLocal, tsToDateStr, type DateStr } from '$lib/date';
+  import { todayLocal, tsToDateStr, isScheduledFor, type DateStr } from '$lib/date';
   import { computeStreak } from '$lib/streaks';
   import { dataVersion } from '$lib/store';
   import TagPill from '../../../components/TagPill.svelte';
@@ -12,9 +12,15 @@
     year: number;
     month: number;        // 0-indexed
     leadingBlanks: number; // empty cells before day 1 (Mon-start week)
-    days: { day: number; date: DateStr; done: boolean; isFuture: boolean; isToday: boolean }[];
+    days: { day: number; date: DateStr; done: boolean; isFuture: boolean; isToday: boolean; isScheduled: boolean }[];
     monthCompletions: number;
-    monthDaysToShow: number; // days elapsed (or full month if past)
+    monthDaysToShow: number; // elapsed *scheduled* days (denominator for the % readout)
+  };
+
+  const SCHEDULE_LABEL: Record<string, string> = {
+    daily: 'Daily',
+    weekdays: 'Weekdays',
+    weekends: 'Weekends'
   };
 
   let habit = $state<Habit | null>(null);
@@ -39,10 +45,10 @@
 
   const streak = $derived.by(() => {
     if (!habit) return null;
-    return computeStreak(completions, today, tsToDateStr(habit.createdAt));
+    return computeStreak(completions, today, tsToDateStr(habit.createdAt), habit.schedule ?? 'daily');
   });
 
-  function buildMonthGrid(year: number, month: number, todayStr: DateStr, completionsSet: Set<DateStr>): MonthGrid {
+  function buildMonthGrid(year: number, month: number, todayStr: DateStr, completionsSet: Set<DateStr>, schedule: Habit['schedule']): MonthGrid {
     const first = new Date(year, month, 1);
     const firstDow = first.getDay(); // 0=Sun
     // Convert to Mon-start: shift so Monday=0, Sunday=6
@@ -52,31 +58,33 @@
 
     const days: MonthGrid['days'] = [];
     let monthCompletions = 0;
-    let elapsed = 0;
+    let elapsedScheduled = 0;
     for (let d = 1; d <= daysCount; d++) {
       const date: DateStr = `${monthPrefix}-${String(d).padStart(2, '0')}`;
       const done = completionsSet.has(date);
       const isFuture = date > todayStr;
       const isToday = date === todayStr;
-      days.push({ day: d, date, done, isFuture, isToday });
-      if (done) monthCompletions++;
-      if (!isFuture) elapsed++;
+      const isScheduled = isScheduledFor(schedule, date);
+      days.push({ day: d, date, done, isFuture, isToday, isScheduled });
+      if (done && isScheduled) monthCompletions++;
+      if (!isFuture && isScheduled) elapsedScheduled++;
     }
 
     return {
       label: first.toLocaleDateString(undefined, { month: 'long', year: 'numeric' }),
       year, month, leadingBlanks, days,
       monthCompletions,
-      monthDaysToShow: elapsed
+      monthDaysToShow: elapsedScheduled
     };
   }
 
   const months = $derived.by(() => {
     if (!habit) return [] as MonthGrid[];
     const now = new Date();
-    const cur = buildMonthGrid(now.getFullYear(), now.getMonth(), today, completions);
+    const sched = habit.schedule;
+    const cur = buildMonthGrid(now.getFullYear(), now.getMonth(), today, completions, sched);
     const prevDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-    const prev = buildMonthGrid(prevDate.getFullYear(), prevDate.getMonth(), today, completions);
+    const prev = buildMonthGrid(prevDate.getFullYear(), prevDate.getMonth(), today, completions, sched);
     return [cur, prev];
   });
 
@@ -94,11 +102,12 @@
       <div class="text-3xl">{habit.emoji ?? '•'}</div>
       <div class="flex-1 min-w-0">
         <h1 class="text-xl font-semibold truncate">{habit.name}</h1>
-        {#if tags.length}
-          <div class="flex gap-1 mt-1">
-            {#each tags as t}<TagPill tag={t} />{/each}
-          </div>
-        {/if}
+        <div class="flex items-center gap-2 mt-1 flex-wrap">
+          <span class="text-[10px] uppercase tracking-wider text-neutral-500 border border-neutral-800 rounded px-1.5 py-0.5">
+            {SCHEDULE_LABEL[habit.schedule ?? 'daily']}
+          </span>
+          {#each tags as t}<TagPill tag={t} />{/each}
+        </div>
       </div>
     </div>
 
@@ -142,11 +151,12 @@
           {#each m.days as d (d.date)}
             <div
               class="aspect-square rounded flex items-center justify-center text-[10px]
-                {d.done ? 'bg-emerald-400 text-black font-semibold' :
+                {d.done && d.isScheduled ? 'bg-emerald-400 text-black font-semibold' :
+                 !d.isScheduled ? 'bg-neutral-950 text-neutral-700 border border-dashed border-neutral-800' :
                  d.isFuture ? 'bg-neutral-950 text-neutral-700' :
                  'bg-neutral-900 text-neutral-500'}
                 {d.isToday ? 'outline outline-1 outline-emerald-400 outline-offset-1' : ''}"
-              title={d.date}>
+              title={d.isScheduled ? d.date : `${d.date} (off-day)`}>
               {d.day}
             </div>
           {/each}

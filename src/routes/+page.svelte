@@ -1,7 +1,7 @@
 <script lang="ts">
   import { db, getActiveHabits, getCompletionsForHabit, toggleCompletion, type Habit, type Tag } from '$lib/db';
   import { today as todayStore, dataVersion, bumpData } from '$lib/store';
-  import { prevDay } from '$lib/date';
+  import { prevDay, isScheduledFor } from '$lib/date';
   import HabitRow from '../components/HabitRow.svelte';
   import AdHocTodos from '../components/AdHocTodos.svelte';
   import DailyNote from '../components/DailyNote.svelte';
@@ -13,19 +13,23 @@
   let completionsByHabit = $state(new Map<string, Set<string>>());
   let tagsById = $state(new Map<string, Tag>());
 
+  // Only the habits actually scheduled for today are shown in the main list.
+  let todaysHabits = $derived(habits.filter(h => isScheduledFor(h.schedule, $todayStore)));
+
   let last7 = $derived.by(() => {
-    const totalHabits = habits.length;
     const out: { date: string; ratio: number; isToday: boolean }[] = [];
     let d = $todayStore;
     for (let i = 0; i < 7; i++) {
+      // Per-day denominator: habits scheduled for *that* day.
+      const scheduled = habits.filter(h => isScheduledFor(h.schedule, d));
       let done = 0;
-      for (const h of habits) {
+      for (const h of scheduled) {
         const set = completionsByHabit.get(h.id);
         if (set && set.has(d)) done++;
       }
       out.unshift({
         date: d,
-        ratio: totalHabits === 0 ? 0 : done / totalHabits,
+        ratio: scheduled.length === 0 ? 0 : done / scheduled.length,
         isToday: i === 0
       });
       d = prevDay(d);
@@ -78,7 +82,7 @@
   </div>
 
   <div class="mt-4">
-    {#each habits as habit (habit.id)}
+    {#each todaysHabits as habit (habit.id)}
       <HabitRow
         {habit}
         today={$todayStore}
@@ -86,6 +90,11 @@
         {tagsById}
         onToggle={() => onToggle(habit)} />
     {/each}
+    {#if habits.length > 0 && todaysHabits.length === 0}
+      <p class="text-sm text-neutral-500 py-6 text-center">
+        Nothing scheduled today. Enjoy the off-day. 🌿
+      </p>
+    {/if}
   </div>
 
   <AdHocTodos date={$todayStore} />
