@@ -4,6 +4,7 @@
   import { prevDay } from '$lib/date';
   import HabitRow from '../components/HabitRow.svelte';
   import AdHocTodos from '../components/AdHocTodos.svelte';
+  import DailyNote from '../components/DailyNote.svelte';
 
   const EMPTY_COMPLETIONS: ReadonlySet<string> = new Set();
 
@@ -86,4 +87,5 @@
   </div>
 
   <AdHocTodos date={$todayStore} />
+  <DailyNote date={$todayStore} />
 </main>
