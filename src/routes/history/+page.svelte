@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { db, type Habit, type Tag, type AdHocTodo, getAdHocTodosForDate, getDayNote } from '$lib/db';
+  import { db, type Habit, type Tag, type AdHocTodo, type Mood, getAdHocTodosForDate, getDayNoteRecord, MOOD_EMOJI } from '$lib/db';
   import { prevDay, todayLocal, type DateStr } from '$lib/date';
   import { dataVersion } from '$lib/store';
 
@@ -7,6 +7,7 @@
     date: DateStr;
     completedHabits: Habit[];
     note: string;
+    mood: Mood | undefined;
     todos: AdHocTodo[];
   };
 
@@ -28,9 +29,9 @@
       const rows = await db.completions.where('date').equals(d).toArray();
       const completedIds = new Set(rows.map(c => c.habitId));
       const completedHabits = allHabits.filter(h => completedIds.has(h.id));
-      const note = await getDayNote(d);
+      const noteRec = await getDayNoteRecord(d);
       const todos = await getAdHocTodosForDate(d);
-      result.push({ date: d, completedHabits, note, todos });
+      result.push({ date: d, completedHabits, note: noteRec.text, mood: noteRec.mood, todos });
       d = prevDay(d);
     }
     habits = allHabits;
@@ -75,7 +76,10 @@
         class="block w-full text-left bg-neutral-950 border border-neutral-900 rounded-lg p-3"
         onclick={() => toggle(d.date)}>
         <div class="flex items-center justify-between">
-          <span class="text-sm font-medium">{fmt(d.date)}</span>
+          <span class="text-sm font-medium flex items-center gap-2">
+            {fmt(d.date)}
+            {#if d.mood !== undefined}<span class="text-base leading-none">{MOOD_EMOJI[d.mood]}</span>{/if}
+          </span>
           <span class="text-[10px] text-neutral-500">{d.completedHabits.length}/{activeHabitCountOn(d.date)}</span>
         </div>
         <div class="flex gap-1 mt-2">

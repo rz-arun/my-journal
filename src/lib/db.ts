@@ -26,9 +26,20 @@ export interface Completion {
   completedAt: number;
 }
 
+export type Mood = 1 | 2 | 3 | 4 | 5;
+
+export const MOOD_EMOJI: Record<Mood, string> = {
+  1: '😢',
+  2: '😕',
+  3: '😐',
+  4: '🙂',
+  5: '😄'
+};
+
 export interface DayNote {
   date: DateStr;
   text: string;
+  mood?: Mood;
   updatedAt: number;
 }
 
@@ -98,12 +109,23 @@ export async function getCompletionsForDate(date: DateStr): Promise<Set<string>>
   return new Set(rows.map(r => r.habitId));
 }
 
-export async function upsertDayNote(date: DateStr, text: string): Promise<void> {
-  await db.dayNotes.put({ date, text, updatedAt: Date.now() });
+export async function setDayNoteText(date: DateStr, text: string): Promise<void> {
+  const existing = await db.dayNotes.get(date);
+  await db.dayNotes.put({ date, text, mood: existing?.mood, updatedAt: Date.now() });
+}
+
+export async function setDayNoteMood(date: DateStr, mood: Mood | undefined): Promise<void> {
+  const existing = await db.dayNotes.get(date);
+  await db.dayNotes.put({ date, text: existing?.text ?? '', mood, updatedAt: Date.now() });
 }
 
 export async function getDayNote(date: DateStr): Promise<string> {
   return (await db.dayNotes.get(date))?.text ?? '';
+}
+
+export async function getDayNoteRecord(date: DateStr): Promise<{ text: string; mood: Mood | undefined }> {
+  const row = await db.dayNotes.get(date);
+  return { text: row?.text ?? '', mood: row?.mood };
 }
 
 export async function addAdHocTodo(date: DateStr, text: string): Promise<void> {

@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import 'fake-indexeddb/auto';
 import { db, type Habit, type Tag } from '../src/lib/db';
 import {
-  getActiveHabits, toggleCompletion, getCompletionsForHabit, upsertDayNote
+  getActiveHabits, toggleCompletion, getCompletionsForHabit, setDayNoteText
 } from '../src/lib/db';
 
 describe('db schema', () => {
@@ -93,9 +93,30 @@ describe('db helpers', () => {
     expect(s.size).toBe(2);
   });
 
-  it('upsertDayNote creates and updates', async () => {
-    await upsertDayNote('2026-05-23', 'first');
-    await upsertDayNote('2026-05-23', 'second');
+  it('setDayNoteText creates and updates', async () => {
+    await setDayNoteText('2026-05-23', 'first');
+    await setDayNoteText('2026-05-23', 'second');
     expect((await db.dayNotes.get('2026-05-23'))?.text).toBe('second');
+  });
+
+  it('mood and text persist independently on the same day', async () => {
+    const { setDayNoteMood, getDayNoteRecord } = await import('../src/lib/db');
+    await setDayNoteText('2026-05-24', 'good day');
+    await setDayNoteMood('2026-05-24', 4);
+    let rec = await getDayNoteRecord('2026-05-24');
+    expect(rec.text).toBe('good day');
+    expect(rec.mood).toBe(4);
+
+    // Updating text should preserve mood
+    await setDayNoteText('2026-05-24', 'great day');
+    rec = await getDayNoteRecord('2026-05-24');
+    expect(rec.text).toBe('great day');
+    expect(rec.mood).toBe(4);
+
+    // Clearing mood should preserve text
+    await setDayNoteMood('2026-05-24', undefined);
+    rec = await getDayNoteRecord('2026-05-24');
+    expect(rec.text).toBe('great day');
+    expect(rec.mood).toBeUndefined();
   });
 });
