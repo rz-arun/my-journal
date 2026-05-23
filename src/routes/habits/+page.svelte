@@ -2,10 +2,13 @@
   import { db, getActiveHabits, getArchivedHabits, type Habit, type Tag } from '$lib/db';
   import { dataVersion, bumpData } from '$lib/store';
   import TagPill from '../../components/TagPill.svelte';
+  import AddHabitForm from '../../components/AddHabitForm.svelte';
 
   let active = $state<Habit[]>([]);
   let archived = $state<Habit[]>([]);
   let tagsById = $state(new Map<string, Tag>());
+  let showForm = $state(false);
+  let allTags = $derived(Array.from(tagsById.values()));
 
   $effect(() => {
     $dataVersion;
@@ -65,5 +68,16 @@
         </div>
       {/each}
     </section>
+  {/if}
+
+  {#if showForm}
+    <AddHabitForm
+      {allTags}
+      onAdded={() => { showForm = false; bumpData(); }}
+      onCancel={() => showForm = false} />
+  {:else}
+    <button
+      class="mt-6 w-full bg-neutral-900 hover:bg-neutral-800 rounded-lg py-3 text-sm font-medium"
+      onclick={() => showForm = true}>+ Add habit</button>
   {/if}
 </main>
