@@ -1,42 +1,42 @@
-# sv
+# My Journal
 
-Everything you need to build a Svelte project, powered by [`sv`](https://github.com/sveltejs/cli).
+A deadly-simple, local-first personal journal for tracking habits and goals. Inspired by Seinfeld's "don't break the chain" and James Clear's "never miss twice."
 
-## Creating a project
+- **Local-only** — IndexedDB, no servers, no auth, no telemetry
+- **PWA** — installs to your phone home screen, works offline
+- **Tag-as-goals** — flat habit list with `#career` / `#health` / etc.
+- **30-day chain** per habit on the home screen
+- **"Never miss twice"** streak rule
 
-If you're seeing this, you've probably already done this step. Congrats!
+## Development
 
-```sh
-# create a new project
-npx sv create my-app
-```
-
-To recreate this project with the same configuration:
-
-```sh
-# recreate this project
-npx sv@0.15.3 create --template minimal --types ts --install npm .
-```
-
-## Developing
-
-Once you've created a project and installed dependencies with `npm install` (or `pnpm install` or `yarn`), start a development server:
-
-```sh
+```bash
+npm install
 npm run dev
-
-# or start the server and open the app in a new browser tab
-npm run dev -- --open
 ```
 
-## Building
+## Test
 
-To create a production version of your app:
+```bash
+npm test
+npm run e2e
+```
 
-```sh
+## Build
+
+```bash
 npm run build
+npm run preview
 ```
 
-You can preview the production build with `npm run preview`.
+## Deploy
 
-> To deploy your app, you may need to install an [adapter](https://svelte.dev/docs/kit/adapters) for your target environment.
+Push to `main` → GitHub Actions builds and publishes to GitHub Pages.
+
+## Design
+
+See [`docs/superpowers/specs/2026-05-23-personal-journal-design.md`](docs/superpowers/specs/2026-05-23-personal-journal-design.md).
+
+## Implementation plan
+
+See [`docs/superpowers/plans/2026-05-23-personal-journal.md`](docs/superpowers/plans/2026-05-23-personal-journal.md).
