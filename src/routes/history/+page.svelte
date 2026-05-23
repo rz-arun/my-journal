@@ -57,6 +57,12 @@
     const dt = new Date(y, m - 1, d);
     return dt.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
   }
+
+  function activeHabitCountOn(date: DateStr): number {
+    const [y, m, d] = date.split('-').map(Number);
+    const dayEndMs = new Date(y, m - 1, d, 23, 59, 59).getTime();
+    return habits.filter(h => h.archivedAt === null || h.archivedAt > dayEndMs).length;
+  }
 </script>
 
 <main class="px-4 pt-6 pb-4 max-w-md mx-auto">
@@ -70,7 +76,7 @@
         onclick={() => toggle(d.date)}>
         <div class="flex items-center justify-between">
           <span class="text-sm font-medium">{fmt(d.date)}</span>
-          <span class="text-[10px] text-neutral-500">{d.completedHabits.length}/{habits.filter(h => h.archivedAt === null || h.archivedAt > new Date(d.date).getTime()).length}</span>
+          <span class="text-[10px] text-neutral-500">{d.completedHabits.length}/{activeHabitCountOn(d.date)}</span>
         </div>
         <div class="flex gap-1 mt-2">
           {#each habits as h}

@@ -22,8 +22,9 @@ export default defineConfig({
         ]
       },
       workbox: {
-        globPatterns: ['**/*.{js,css,html,svg,png,webp,ico,webmanifest}'],
-        navigateFallback: '/index.html'
+        globPatterns: ['**/*.{js,css,html,svg,png,webp,ico,webmanifest}']
+        // navigateFallback intentionally omitted: adapter-static's fallback: 'index.html'
+        // already serves the SPA shell; an absolute path here breaks under a base-path deploy.
       }
     })
   ]
