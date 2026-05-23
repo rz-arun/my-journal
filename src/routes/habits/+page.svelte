@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { db, getActiveHabits, getArchivedHabits, type Habit, type Tag } from '$lib/db';
+  import { db, getActiveHabits, getArchivedHabits, moveHabit, type Habit, type Tag } from '$lib/db';
   import { dataVersion, bumpData } from '$lib/store';
   import TagPill from '../../components/TagPill.svelte';
   import AddHabitForm from '../../components/AddHabitForm.svelte';
@@ -50,6 +50,10 @@
             </div>
           {/if}
         </div>
+        <button class="text-neutral-500 px-1 text-xs disabled:opacity-30" disabled={active[0].id === h.id}
+                onclick={() => moveHabit(h.id, 'up').then(bumpData)}>↑</button>
+        <button class="text-neutral-500 px-1 text-xs disabled:opacity-30" disabled={active[active.length - 1].id === h.id}
+                onclick={() => moveHabit(h.id, 'down').then(bumpData)}>↓</button>
         <button class="text-xs text-neutral-500 px-2" onclick={() => archive(h)}>Archive</button>
       </div>
     {:else}

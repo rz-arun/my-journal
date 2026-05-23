@@ -127,3 +127,16 @@ export async function deleteAdHocTodo(id: string): Promise<void> {
 export async function getAdHocTodosForDate(date: DateStr): Promise<AdHocTodo[]> {
   return db.adHocTodos.where('date').equals(date).toArray();
 }
+
+export async function moveHabit(habitId: string, direction: 'up' | 'down'): Promise<void> {
+  const active = await getActiveHabits();
+  const idx = active.findIndex(h => h.id === habitId);
+  if (idx < 0) return;
+  const swap = direction === 'up' ? idx - 1 : idx + 1;
+  if (swap < 0 || swap >= active.length) return;
+  const a = active[idx], b = active[swap];
+  await db.habits.bulkPut([
+    { ...a, sortOrder: b.sortOrder },
+    { ...b, sortOrder: a.sortOrder }
+  ]);
+}
