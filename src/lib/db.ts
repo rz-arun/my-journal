@@ -140,3 +140,34 @@ export async function moveHabit(habitId: string, direction: 'up' | 'down'): Prom
     { ...b, sortOrder: a.sortOrder }
   ]);
 }
+
+export async function archiveHabit(habitId: string): Promise<void> {
+  const h = await db.habits.get(habitId);
+  if (!h) return;
+  await db.habits.put({ ...h, archivedAt: Date.now() });
+}
+
+export async function unarchiveHabit(habitId: string): Promise<void> {
+  const h = await db.habits.get(habitId);
+  if (!h) return;
+  const active = await getActiveHabits();
+  await db.habits.put({ ...h, archivedAt: null, sortOrder: active.length });
+}
+
+export interface HabitEdit {
+  name: string;
+  emoji?: string;
+  tagIds: string[];
+}
+
+export async function updateHabit(habitId: string, edits: HabitEdit): Promise<void> {
+  const h = await db.habits.get(habitId);
+  if (!h) return;
+  await db.habits.put({
+    ...h,
+    name: edits.name,
+    emoji: edits.emoji,
+    // Spread to plain array — guards against Svelte 5 $state Proxy reaching IndexedDB structured-clone
+    tagIds: [...edits.tagIds]
+  });
+}

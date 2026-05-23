@@ -1,18 +1,25 @@
 <script lang="ts">
-  import { db, type Tag } from '$lib/db';
+  import { untrack } from 'svelte';
+  import { db, updateHabit, type Habit, type Tag } from '$lib/db';
 
-  let { allTags, onAdded, onCancel }: {
+  let { allTags, editing = null, onSaved, onCancel }: {
     allTags: Tag[];
-    onAdded: () => void;
+    editing?: Habit | null;
+    onSaved: () => void;
     onCancel: () => void;
   } = $props();
 
   const PALETTE = ['#7ab4ff', '#7ad198', '#d489d3', '#e3a44b', '#ff8181', '#a9d6e5'];
 
-  let name = $state('');
-  let emoji = $state('');
-  let pickedTagIds = $state<string[]>([]);
+  // Initial values come from `editing` at mount; the parent remounts this component
+  // by swapping between the edit and add code paths, so we don't need to react to changes.
+  let name = $state(untrack(() => editing?.name ?? ''));
+  let emoji = $state(untrack(() => editing?.emoji ?? ''));
+  let pickedTagIds = $state<string[]>(untrack(() => editing ? [...editing.tagIds] : []));
   let newTagName = $state('');
+
+  const isEdit = $derived(editing !== null);
+  const submitLabel = $derived(isEdit ? 'Save changes' : 'Add habit');
 
   function slugify(s: string) {
     return s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
@@ -41,18 +48,28 @@
     const trimmed = name.trim();
     if (!trimmed) return;
     await ensureTagFromInput();
-    const count = await db.habits.count();
-    await db.habits.put({
-      id: crypto.randomUUID(),
-      name: trimmed,
-      emoji: emoji.trim() || undefined,
-      tagIds: [...pickedTagIds],
-      createdAt: Date.now(),
-      archivedAt: null,
-      sortOrder: count
-    });
+
+    if (editing) {
+      await updateHabit(editing.id, {
+        name: trimmed,
+        emoji: emoji.trim() || undefined,
+        tagIds: pickedTagIds
+      });
+    } else {
+      const count = await db.habits.count();
+      await db.habits.put({
+        id: crypto.randomUUID(),
+        name: trimmed,
+        emoji: emoji.trim() || undefined,
+        tagIds: [...pickedTagIds],
+        createdAt: Date.now(),
+        archivedAt: null,
+        sortOrder: count
+      });
+    }
+
     name = ''; emoji = ''; pickedTagIds = [];
-    onAdded();
+    onSaved();
   }
 </script>
 
@@ -87,6 +104,6 @@
   <div class="mt-4 flex gap-2 justify-end">
     <button class="text-sm text-neutral-500 px-3 py-1.5" onclick={onCancel}>Cancel</button>
     <button class="text-sm bg-emerald-500 text-black px-3 py-1.5 rounded font-medium disabled:opacity-30"
-            onclick={submit} disabled={!name.trim()}>Add habit</button>
+            onclick={submit} disabled={!name.trim()}>{submitLabel}</button>
   </div>
 </div>
