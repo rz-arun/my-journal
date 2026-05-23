@@ -7,8 +7,8 @@ describe('date helpers', () => {
   describe('todayLocal', () => {
     it('returns YYYY-MM-DD for the local calendar day', () => {
       vi.useFakeTimers();
-      vi.setSystemTime(new Date('2026-05-23T15:30:00'));
-      expect(todayLocal()).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+      vi.setSystemTime(new Date(2026, 4, 23, 15, 30, 0));
+      expect(todayLocal()).toBe('2026-05-23');
     });
 
     it('does not roll over at UTC midnight if local time is still the previous day', () => {
@@ -48,6 +48,9 @@ describe('date helpers', () => {
     });
     it('respects leap year', () => {
       expect(nextDay('2024-02-28')).toBe('2024-02-29');
+    });
+    it('crosses year boundary', () => {
+      expect(nextDay('2025-12-31')).toBe('2026-01-01');
     });
   });
 
