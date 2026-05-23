@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { base } from '$app/paths';
   import { db, getActiveHabits, getArchivedHabits, moveHabit, type Habit, type Tag } from '$lib/db';
   import { dataVersion, bumpData } from '$lib/store';
   import TagPill from '../../components/TagPill.svelte';
@@ -32,7 +33,10 @@
 </script>
 
 <main class="px-4 pt-6 pb-4 max-w-md mx-auto">
-  <h1 class="text-2xl font-semibold">Habits</h1>
+  <div class="flex items-center justify-between">
+    <h1 class="text-2xl font-semibold">Habits</h1>
+    <a href="{base}/settings/" class="text-neutral-500 text-lg" aria-label="Settings">⚙</a>
+  </div>
 
   <section class="mt-6">
     <div class="text-[10px] uppercase tracking-wider text-neutral-500 mb-2">Active ({active.length})</div>
