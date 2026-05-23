@@ -1,6 +1,7 @@
 <script lang="ts">
   import '../app.css';
   import TabBar from '../components/TabBar.svelte';
+  import InstallBanner from '../components/InstallBanner.svelte';
   import { onMount } from 'svelte';
   import { seedIfEmpty } from '$lib/seed';
   import { scheduleMidnightTick } from '$lib/store';
@@ -22,6 +23,7 @@
 <div class="min-h-screen pb-24">
   {#if ready}
     {@render children()}
+    <InstallBanner />
   {:else}
     <div class="p-6 text-neutral-500 text-sm">Loading…</div>
   {/if}
