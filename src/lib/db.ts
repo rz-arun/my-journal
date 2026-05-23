@@ -57,3 +57,73 @@ class JournalDB extends Dexie {
 }
 
 export const db = new JournalDB();
+
+// --- Helpers ---
+
+export async function getActiveHabits(): Promise<Habit[]> {
+  const all = await db.habits.toArray();
+  return all
+    .filter(h => h.archivedAt === null)
+    .sort((a, b) => a.sortOrder - b.sortOrder);
+}
+
+export async function getArchivedHabits(): Promise<Habit[]> {
+  const all = await db.habits.toArray();
+  return all
+    .filter(h => h.archivedAt !== null)
+    .sort((a, b) => (b.archivedAt ?? 0) - (a.archivedAt ?? 0));
+}
+
+/** Returns `true` if completion was added, `false` if removed. */
+export async function toggleCompletion(habitId: string, date: DateStr): Promise<boolean> {
+  const existing = await db.completions.get([habitId, date]);
+  if (existing) {
+    await db.completions.delete([habitId, date]);
+    return false;
+  }
+  await db.completions.put({ habitId, date, completedAt: Date.now() });
+  return true;
+}
+
+export async function getCompletionsForHabit(habitId: string): Promise<Set<DateStr>> {
+  const rows = await db.completions.where('habitId').equals(habitId).toArray();
+  return new Set(rows.map(r => r.date));
+}
+
+export async function getCompletionsForDate(date: DateStr): Promise<Set<string>> {
+  const rows = await db.completions.where('date').equals(date).toArray();
+  return new Set(rows.map(r => r.habitId));
+}
+
+export async function upsertDayNote(date: DateStr, text: string): Promise<void> {
+  await db.dayNotes.put({ date, text, updatedAt: Date.now() });
+}
+
+export async function getDayNote(date: DateStr): Promise<string> {
+  return (await db.dayNotes.get(date))?.text ?? '';
+}
+
+export async function addAdHocTodo(date: DateStr, text: string): Promise<void> {
+  await db.adHocTodos.put({
+    id: crypto.randomUUID(),
+    date, text, done: false, doneAt: null
+  });
+}
+
+export async function toggleAdHocTodo(id: string): Promise<void> {
+  const t = await db.adHocTodos.get(id);
+  if (!t) return;
+  await db.adHocTodos.put({
+    ...t,
+    done: !t.done,
+    doneAt: !t.done ? Date.now() : null
+  });
+}
+
+export async function deleteAdHocTodo(id: string): Promise<void> {
+  await db.adHocTodos.delete(id);
+}
+
+export async function getAdHocTodosForDate(date: DateStr): Promise<AdHocTodo[]> {
+  return db.adHocTodos.where('date').equals(date).toArray();
+}
