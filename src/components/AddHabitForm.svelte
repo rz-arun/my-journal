@@ -46,7 +46,7 @@
       id: crypto.randomUUID(),
       name: trimmed,
       emoji: emoji.trim() || undefined,
-      tagIds: pickedTagIds,
+      tagIds: [...pickedTagIds],
       createdAt: Date.now(),
       archivedAt: null,
       sortOrder: count
