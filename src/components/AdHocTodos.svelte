@@ -33,27 +33,31 @@
   <div class="text-[10px] uppercase tracking-wider text-neutral-500 mb-2">Today's todos</div>
 
   {#each items as t (t.id)}
-    <div class="flex items-center py-1.5 group">
+    <div class="flex items-center py-1.5">
       <button
-        class="w-5 h-5 rounded mr-2.5 flex items-center justify-center {t.done ? 'bg-emerald-400' : 'border border-neutral-700'}"
+        class="w-5 h-5 rounded mr-2.5 flex items-center justify-center shrink-0 {t.done ? 'bg-emerald-400' : 'border-2 border-neutral-500'}"
         onclick={() => toggle(t.id)}
         aria-label={t.done ? 'Mark incomplete' : 'Mark complete'}>
         {#if t.done}<span class="text-black text-xs font-bold">✓</span>{/if}
       </button>
       <span class="flex-1 text-sm {t.done ? 'text-neutral-500 line-through' : ''}">{t.text}</span>
       <button
-        class="text-neutral-700 opacity-0 group-hover:opacity-100 text-xs px-1"
+        class="text-neutral-500 hover:text-neutral-300 text-sm px-2 py-1"
         onclick={() => remove(t.id)}
         aria-label="Delete todo">✕</button>
     </div>
   {/each}
 
   <form onsubmit={add} class="flex items-center py-1.5">
-    <span class="w-5 h-5 mr-2.5 text-neutral-700 text-center text-sm">+</span>
+    <button
+      type="submit"
+      class="w-5 h-5 mr-2.5 shrink-0 rounded border-2 border-dashed border-neutral-700 text-neutral-500 text-center text-sm leading-none flex items-center justify-center hover:border-neutral-500 hover:text-neutral-300"
+      aria-label="Add todo">+</button>
     <input
-      class="flex-1 bg-transparent text-sm placeholder-neutral-700 outline-none"
+      class="flex-1 bg-transparent text-sm placeholder-neutral-600 outline-none"
       placeholder="Add today's todo"
       bind:value={newText}
-      type="text" />
+      type="text"
+      enterkeyhint="done" />
   </form>
 </section>
